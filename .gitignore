@@ -1,0 +1,8 @@
+.superpowers/
+node_modules/
+dist/
+.env
+.env.local
+firestore.rules
+.firebaserc
+test-results/

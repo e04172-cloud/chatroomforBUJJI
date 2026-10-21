@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>부대찌개반 대화방 시안</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root{
+    --bg:#FFF8F1; --panel:#FFFFFF; --ink:#3A2520; --sub:#8A7068; --line:#F0E2D6;
+    --broth:#D9481C; --broth-deep:#B5370F; --broth-soft:#FDEBE2;
+    --cheese:#F5B82E; --cheese-soft:#FFF4D6;
+    --scallion:#4E9A51; --scallion-soft:#E8F4E6;
+    --warn:#E8901C; --warn-soft:#FFF3E2; --danger:#C93A2B; --danger-soft:#FBE7E4;
+    --ice:#3A9AD9; --ice-soft:#E7F3FB;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#F3E7DC;font-family:Pretendard,system-ui,sans-serif;color:var(--ink);}
+  .page{max-width:1280px;margin:0 auto;padding:32px 24px 64px}
+  h1{font-size:22px;margin:0 0 4px}
+  .lead{color:var(--sub);margin:0 0 28px;font-size:14px;line-height:1.6}
+  .tag{display:inline-block;font-size:12px;font-weight:700;color:var(--broth);background:var(--broth-soft);padding:4px 10px;border-radius:999px;margin-bottom:10px}
+  .row{display:grid;grid-template-columns:380px 1fr;gap:28px;align-items:start;margin-bottom:48px}
+  @media(max-width:980px){.row{grid-template-columns:1fr}}
+  .note{font-size:13px;color:var(--sub);line-height:1.6;margin-top:10px}
+  .note b{color:var(--ink)}
+
+  .frame{background:var(--bg);border-radius:20px;box-shadow:0 20px 50px -20px rgba(90,40,20,.35);overflow:hidden;border:1px solid #E6D3C3}
+  .bar{display:flex;align-items:center;gap:6px;padding:10px 14px;background:#fff;border-bottom:1px solid var(--line)}
+  .dot{width:10px;height:10px;border-radius:50%;background:#EEE3DA}
+  .url{margin-left:10px;font-size:12px;color:var(--sub);background:var(--bg);padding:4px 12px;border-radius:8px;flex:1}
+
+  /* 냄비 헤더: 국물색 띠 + 아래쪽 물결 */
+  .pot{position:relative;background:linear-gradient(180deg,var(--broth) 0%,var(--broth-deep) 100%);color:#fff;padding:14px 18px 22px;display:flex;align-items:center;gap:12px}
+  .pot::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:12px;
+    background:radial-gradient(circle at 10px 0,transparent 9px,var(--bg) 10px) repeat-x;background-size:20px 12px}
+  .pot .logo{width:42px;height:42px;border-radius:14px;background:rgba(255,255,255,.18);display:grid;place-items:center;font-size:24px}
+  .pot .t{font-weight:800;font-size:16px;letter-spacing:-.2px}
+  .pot .m{font-size:12px;opacity:.85}
+  .grow{flex:1}
+  .pill{font-size:12px;font-weight:700;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.18);color:#fff;white-space:nowrap}
+  .pill.ice{background:#fff;color:#6B5C55}
+
+  /* join */
+  .join{padding:22px 22px 26px}
+  .join h2{font-size:20px;margin:0 0 4px}
+  .join .s{color:var(--sub);font-size:13px;margin:0 0 6px}
+  .lbl{font-size:12px;font-weight:700;color:var(--sub);margin:16px 0 8px}
+  .names{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  .nm{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 0;text-align:center;font-size:13px}
+  .nm.taken{color:var(--sub);background:#FBF4EE}.nm.taken::before{content:"✔ ";color:var(--scallion);font-size:11px}
+  .nm.sel{border-color:var(--broth);background:var(--broth-soft);color:var(--broth);font-weight:700}
+  .emojis{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  .em{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 6px;background:#fff;border:1px solid var(--line);border-radius:12px}
+  .em span{font-size:24px;line-height:1.1}
+  .em small{font-size:11px;color:var(--sub)}
+  .em.sel{border:2px solid var(--broth);background:var(--broth-soft)}
+  .em.sel small{color:var(--broth);font-weight:700}
+  .emojis{grid-template-columns:repeat(5,1fr)}
+  .em span{font-size:22px}
+  .em small{font-size:10px;letter-spacing:-.3px;white-space:nowrap}
+  .grp{font-size:11px;font-weight:700;color:var(--broth);margin:4px 0 6px}
+  .grp.weird{color:#8B55D9;margin-top:12px}
+  .em.w{background:#FBF8FF;border-color:#EADFF8}
+  
+  .em.w.sel small{color:#8B55D9;font-weight:700}
+  .today{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:4px 14px 0;padding:8px 10px;background:#fff;border:1px solid var(--line);border-radius:12px;font-size:12px}
+  .today b{font-size:11px;color:var(--broth);margin-right:2px}
+  .chip{background:var(--bg);border-radius:999px;padding:2px 7px;font-size:12px}
+  .chip.odd{background:#F3E9FF}
+  .more{font-size:11px;color:var(--sub)}
+  .verdict{margin-left:auto;font-size:11px;font-weight:800;color:#8B55D9;background:#F3E9FF;border-radius:999px;padding:3px 8px}
+  .inp{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px;color:var(--sub)}
+  .btn{display:block;width:100%;margin-top:18px;background:var(--broth);color:#fff;border:0;border-radius:12px;padding:14px;font-size:15px;font-weight:800;font-family:inherit;box-shadow:0 6px 14px -6px rgba(217,72,28,.6)}
+  .preview{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px}
+  .av{width:40px;height:40px;border-radius:14px;display:grid;place-items:center;font-size:22px;flex:none}
+  .ing{display:inline-block;font-size:10px;font-weight:700;color:var(--sub);background:#F6ECE3;border-radius:6px;padding:1px 6px;margin-left:4px;vertical-align:1px}
+
+  /* chat */
+  .chat{display:flex;flex-direction:column;height:660px}
+  .msgs{flex:1;overflow:hidden;padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+  .daysep{align-self:center;font-size:11px;color:var(--sub);background:#fff;padding:4px 12px;border-radius:999px;border:1px solid var(--line)}
+  .m-row{display:flex;gap:10px;align-items:flex-start;max-width:80%}
+  .m-row.me{align-self:flex-end;flex-direction:row-reverse}
+  .who{font-size:12px;color:var(--sub);margin:0 0 4px 2px}
+  .who b{color:var(--ink);font-weight:600}
+  .bub{background:#fff;padding:10px 14px;border-radius:4px 16px 16px 16px;font-size:14px;line-height:1.5;border:1px solid var(--line)}
+  .me .bub{background:var(--broth);color:#fff;border-color:var(--broth);border-radius:16px 4px 16px 16px}
+  .t-bub{background:var(--cheese-soft);border-color:#F4DC9B}
+  .time{font-size:10px;color:#B9A398;align-self:flex-end;white-space:nowrap}
+  .mask{letter-spacing:1px;color:#C9B7AD}
+  .sys{align-self:center;font-size:12px;color:var(--sub);background:rgba(255,255,255,.75);padding:6px 12px;border-radius:10px}
+  .composer{display:flex;gap:8px;padding:12px;background:#fff;border-top:1px solid var(--line);align-items:center}
+  .composer .inp{flex:1;padding:11px 14px;background:var(--bg)}
+  .send{width:42px;height:42px;border-radius:12px;background:var(--broth);color:#fff;display:grid;place-items:center;font-size:18px}
+  .warnbox{margin:0 12px 10px;background:var(--warn-soft);border:1px solid #F5D3A3;color:#94550E;border-radius:12px;padding:10px 12px;font-size:13px;display:flex;gap:8px;align-items:center}
+  .teacherbadge{font-size:10px;font-weight:800;color:#6B4A00;background:var(--cheese);border-radius:6px;padding:2px 6px;margin-left:4px}
+
+  /* frozen */
+  .frozen .pot{background:linear-gradient(180deg,#8A7A72 0%,#6B5C55 100%)}
+  .frozen .msgs{filter:saturate(.35)}
+  .icebanner{margin:6px 18px 0;background:#F3EEEA;border:1px solid #E2D7CF;color:#5E4F48;border-radius:14px;padding:12px 14px;font-size:13px;display:flex;gap:10px;align-items:center}
+  .composer.off .inp{background:#F2F4F7;color:#9AA5B1}
+
+  /* teacher */
+  .tlayout{display:grid;grid-template-columns:1fr 300px;height:660px}
+  .side{background:#fff;border-left:1px solid var(--line);display:flex;flex-direction:column}
+  .side h4{margin:0;font-size:14px}
+  .sidehead{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+  .count{font-size:12px;color:var(--sub)}
+  .addbtn{margin-left:auto;font-size:12px;font-weight:800;color:var(--broth);background:var(--broth-soft);border-radius:8px;padding:6px 10px}
+  .plist{flex:1;overflow:hidden;padding:6px 8px}
+  .p{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:10px;font-size:13px}
+  .p .av{width:32px;height:32px;border-radius:10px;font-size:17px}
+  .on{width:7px;height:7px;border-radius:50%;background:var(--scallion);display:inline-block;margin-left:4px}
+  .st{margin-left:auto;font-size:11px;padding:3px 8px;border-radius:999px;white-space:nowrap}
+  .st.wait{background:#F6ECE3;color:var(--sub)}
+  .st.ban{background:var(--danger-soft);color:var(--danger);font-weight:700}
+  .menu{margin:0 8px 8px 50px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 24px -10px rgba(90,40,20,.3);padding:6px;font-size:13px}
+  .menu div{padding:8px 10px;border-radius:8px}
+  .menu .d{color:var(--danger)}
+  .menu div:first-child{background:var(--bg)}
+  .freeze{margin:12px 12px 0;padding:12px 14px;border-radius:14px 14px 0 0;background:var(--broth-soft);border:1px solid #F4CDBD;border-bottom:0;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--broth-deep);font-weight:800}
+  .tog.onn{background:var(--broth)}.tog.onn::after{left:21px}
+  .sched{margin:0 12px 12px;padding:10px 14px;border-radius:0 0 14px 14px;background:#fff;border:1px solid #F4CDBD;font-size:12px;color:var(--sub);display:flex;align-items:center;gap:6px}
+  .sched .tm{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:3px 8px;color:var(--ink);font-weight:700}
+  .flame{display:inline-block;animation:flick 1.2s infinite alternate}@keyframes flick{from{transform:scale(1)}to{transform:scale(1.15) rotate(-4deg)}}
+  .tog{margin-left:auto;width:42px;height:24px;border-radius:999px;background:#C7D3DE;position:relative;flex:none}
+  .tog::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff}
+  .hover-del{display:flex;align-items:center;gap:6px}
+  .delchip{font-size:11px;color:var(--danger);background:var(--danger-soft);border-radius:8px;padding:4px 8px;white-space:nowrap;font-weight:700}
+  .deleted{font-style:italic;color:#B9A398;background:#FBF4EE;border:1px dashed var(--line)}
+  .side .pill{background:var(--broth-soft);color:var(--broth)}
+  .room{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;font-size:14px}
+  .room.off{opacity:.65}
+  .badge{background:var(--broth);color:#fff;font-size:11px;font-weight:800;border-radius:999px;min-width:20px;height:20px;display:grid;place-items:center;padding:0 6px}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>🍲 부대찌개반 대화방 · 화면 시안 5</h1>
+  <p class="lead"><b>얼음 → 냄비 불 끄기/켜기</b>로 바꿨어요. 선생님 화면 오른쪽 위에 불 스위치와 자동 불 끄기 시간이 있어요.<br>맨 아래에 학생이 로그인하면 보는 <b>내 냄비 목록</b> 화면도 추가했어요.</p>
+
+  <div class="row">
+    <div>
+      <span class="tag">① 학생 첫 입장</span>
+      <div class="frame">
+        <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">부대찌개반.web.app</span></div>
+        <div class="pot">
+          <div class="logo">🍲</div>
+          <div><div class="t">부대찌개반에 어서 와!</div><div class="m">오늘은 어떤 재료로 들어갈래?</div></div>
+        </div>
+        <div class="join">
+          <div class="lbl">1. 내 이름 고르기</div>
+          <div class="names">
+            <div class="nm taken">김가은</div><div class="nm taken">김도윤</div><div class="nm sel">박서준</div><div class="nm">박하린</div>
+            <div class="nm taken">이시우</div><div class="nm">이지아</div><div class="nm">정예준</div><div class="nm taken">최유나</div>
+          </div>
+          <p class="note" style="margin:6px 0 0">✔ 표시는 이미 가입한 이름이에요. 누르면 암호만 넣고 들어가요.</p>
+
+          <div class="lbl">2. 나는 어떤 재료?</div>
+                    <div class="emojis">
+            <div class="em"><span>🌭</span><small>소시지</small></div>
+            <div class="em"><span>🥫</span><small>스팸</small></div>
+            <div class="em"><span>🍜</span><small>라면사리</small></div>
+            <div class="em"><span>🧀</span><small>치즈</small></div>
+            <div class="em"><span>🥬</span><small>김치</small></div>
+            <div class="em"><span>🌶️</span><small>고추</small></div>
+            <div class="em"><span>🫘</span><small>베이크드빈</small></div>
+            <div class="em"><span>🥓</span><small>베이컨</small></div>
+            <div class="em"><span>🍄</span><small>버섯</small></div>
+            <div class="em"><span>🧅</span><small>양파</small></div>
+            <div class="em"><span>🍡</span><small>떡사리</small></div>
+            <div class="em"><span>🥟</span><small>만두</small></div>
+            <div class="em"><span>🍢</span><small>어묵</small></div>
+            <div class="em"><span>🧄</span><small>마늘</small></div>
+            <div class="em"><span>🥚</span><small>계란</small></div>
+            <div class="em"><span>🧈</span><small>두부</small></div>
+            <div class="em sel"><span>🍫</span><small>초콜릿</small></div>
+            <div class="em"><span>🍬</span><small>젤리</small></div>
+            <div class="em"><span>🍭</span><small>막대사탕</small></div>
+            <div class="em"><span>🍎</span><small>사과</small></div>
+            <div class="em"><span>🍓</span><small>딸기</small></div>
+            <div class="em"><span>🍌</span><small>바나나</small></div>
+            <div class="em"><span>🍉</span><small>수박</small></div>
+            <div class="em"><span>🍍</span><small>파인애플</small></div>
+            <div class="em"><span>🍦</span><small>아이스크림</small></div>
+            <div class="em"><span>🍩</span><small>도넛</small></div>
+            <div class="em"><span>🧁</span><small>컵케이크</small></div>
+            <div class="em"><span>🍪</span><small>쿠키</small></div>
+            <div class="em"><span>🍕</span><small>피자</small></div>
+            <div class="em"><span>🥤</span><small>콜라</small></div>
+          </div>
+
+          <div class="lbl">3. 암호 정하기</div>
+          <div class="inp">••••••</div>
+
+          <div class="lbl">미리보기</div>
+          <div class="preview"><div class="av" style="background:#F3E9FF">🍫</div><div><b>박서준</b><span class="ing">초콜릿</span><div class="count">대화방에서 이렇게 보여요</div></div></div>
+
+          <button class="btn">냄비에 퐁당! 입장하기</button>
+        </div>
+      </div>
+      <p class="note">재료는 여러 학생이 같은 걸 골라도 돼요. 입장한 뒤에도 바꿀 수 있어요.</p>
+    </div>
+
+    <div>
+      <span class="tag">② 학생 대화방</span>
+      <div class="frame">
+        <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">부대찌개반.web.app</span></div>
+        <div class="chat">
+          <div class="pot">
+            <div class="logo">🍲</div>
+            <div><div class="t">부대찌개반</div><div class="m">27명 · <span class="flame">🔥</span> 지금 18명 보글보글</div></div>
+            <div class="grow"></div>
+            <span class="pill">🍫 박서준 ▾</span>
+          </div>
+          <div class="today">
+            <b>오늘의 부대찌개</b>
+            <span class="chip">🌭×4</span><span class="chip">🍜×3</span><span class="chip">🧀×3</span><span class="chip">🥬×2</span><span class="chip odd">🍫×3</span><span class="chip odd">🍉×2</span><span class="chip odd">🍕×1</span><span class="more">외 9종</span>
+            <span class="verdict">맛: 🤢 위험</span>
+          </div>
+          <div class="msgs">
+            <div class="daysep">10월 21일 화요일</div>
+            <div class="m-row"><div class="av" style="background:var(--cheese-soft)">🍜</div><div><div class="who"><b>이시우</b><span class="ing">라면사리</span></div><div class="bub">내일 현장체험학습 몇 시까지 와야 돼?</div></div><span class="time">오전 9:12</span></div>
+            <div class="m-row"><div class="av" style="background:var(--cheese)">🧑‍🍳</div><div><div class="who"><b>담임선생님</b><span class="teacherbadge">주방장</span></div><div class="bub t-bub">8시 40분까지 운동장으로 오세요. 도시락 꼭 챙기고요! 🍱</div></div><span class="time">오전 9:13</span></div>
+            <div class="m-row"><div class="av" style="background:var(--scallion-soft)">🥬</div><div><div class="who"><b>최유나</b><span class="ing">김치</span></div><div class="bub">아 진짜 <span class="mask">＊＊</span> 일찍이네 ㅋㅋ</div></div><span class="time">오전 9:14</span></div>
+            <div class="m-row me"><div class="av" style="background:#F3E9FF">🍫</div><div class="bub">나 버스 같이 탈 사람!</div><span class="time">오전 9:15</span></div>
+            <div class="sys">🍉 김도윤(수박) 님이 냄비에 들어왔어요… 괜찮을까?</div>
+          </div>
+          <div class="warnbox">⚠️ 국물이 탁해져요! 바르고 고운 말을 써요. 부적절한 표현은 가려서 보냈어요.</div>
+          <div class="composer"><span style="font-size:20px">🍫</span><div class="inp">메시지를 입력하세요</div><div class="send">➤</div></div>
+        </div>
+      </div>
+      <p class="note">선생님은 <b>🧑‍🍳 주방장</b>으로 표시되고, 선생님 말풍선은 치즈색이라 공지가 눈에 띄어요. 이름 옆에 작게 재료 이름이 붙어요. "주방장" 대신 그냥 "선생님"으로 써도 돼요.</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div>
+      <span class="tag">③ 불 꺼진 냄비 (학생 화면)</span>
+      <div class="frame frozen">
+        <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">부대찌개반.web.app</span></div>
+        <div class="chat" style="height:600px">
+          <div class="pot">
+            <div class="logo">🧊</div>
+            <div><div class="t">부대찌개반</div><div class="m">27명 · 💤 냄비가 식는 중</div></div>
+            <div class="grow"></div>
+            <span class="pill ice">💤 불 꺼짐</span>
+          </div>
+          <div class="icebanner">💨 <div><b>주방장이 냄비 불을 껐어요.</b><br>불이 다시 켜질 때까지 대화를 쓸 수 없어요.<br><span style="opacity:.75">밤 10시~아침 7시는 자동으로 불이 꺼져요.</span></div></div>
+          <div class="msgs">
+            <div class="m-row"><div class="av" style="background:var(--cheese-soft)">🍜</div><div><div class="who"><b>이시우</b></div><div class="bub">ㅋㅋㅋㅋㅋ</div></div></div>
+            <div class="m-row"><div class="av" style="background:var(--scallion-soft)">🥬</div><div><div class="who"><b>최유나</b></div><div class="bub">ㅋㅋㅋㅋ 도배 ㄱㄱ</div></div></div>
+            <div class="sys">💨 냄비 불이 꺼졌어요 · 오전 9:20</div>
+          </div>
+          <div class="composer off"><span style="font-size:20px;opacity:.4">🌭</span><div class="inp">💤 불이 꺼져 있어서 쓸 수 없어요</div><div class="send" style="background:#C7D3DE">➤</div></div>
+        </div>
+      </div>
+      <p class="note">불이 꺼지면 국물색 띠가 <b>식은 회갈색</b>으로 바뀌고, 위쪽 "🔥 보글보글"이 "💤 불 꺼짐"으로 바뀌어요. 불이 켜져 있을 땐 🔥가 살짝 일렁여요.</p>
+    </div>
+
+    <div>
+      <span class="tag">④ 선생님(주방장) 화면</span>
+      <div class="frame">
+        <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">부대찌개반.web.app · 운영자</span></div>
+        <div class="tlayout">
+          <div class="chat" style="height:660px">
+            <div class="pot">
+              <div class="logo">🍲</div>
+              <div><div class="t">부대찌개반</div><div class="m">27명 · <span class="flame">🔥</span> 18명 보글보글</div></div>
+              <div class="grow"></div>
+              <span class="pill">🔗 참여 링크 복사</span>
+            </div>
+            <div class="msgs">
+              <div class="m-row"><div class="av" style="background:var(--cheese-soft)">🍜</div><div><div class="who"><b>이시우</b><span class="ing">라면사리</span></div><div class="bub">내일 현장체험학습 몇 시까지 와야 돼?</div></div></div>
+              <div class="m-row"><div class="av" style="background:var(--scallion-soft)">🥬</div><div><div class="who"><b>최유나</b><span class="ing">김치</span></div><div class="hover-del"><div class="bub">아 진짜 <span class="mask">＊＊</span> 일찍이네 ㅋㅋ</div><span class="delchip">🗑 삭제</span></div></div></div>
+              <div class="m-row"><div class="av" style="background:#F6ECE3">🍄</div><div><div class="who"><b>정예준</b><span class="ing">버섯</span></div><div class="bub deleted">주방장이 건져낸 메시지예요</div></div></div>
+              <div class="m-row me"><div class="av" style="background:var(--cheese)">🧑‍🍳</div><div class="bub">8시 40분까지 운동장으로 오세요. 도시락 꼭 챙기고요! 🍱</div></div>
+            </div>
+            <div class="composer"><span style="font-size:20px">🧑‍🍳</span><div class="inp">공지나 메시지를 입력하세요</div><div class="send">➤</div></div>
+          </div>
+          <div class="side">
+            <div class="freeze"><span class="flame">🔥</span> 냄비 불 켜짐<div class="tog onn"></div></div><div class="sched">⏰ 자동 불 끄기 <span class="tm">22:00</span>~<span class="tm">07:00</span> 매일</div>
+            <div class="sidehead"><h4>재료 명단</h4><span class="count">27명</span><span class="addbtn">＋ 추가</span></div>
+            <div class="plist">
+              <div class="p"><div class="av" style="background:var(--broth-soft)">🌭</div>박서준<span class="on"></span></div>
+              <div class="p" style="background:var(--bg)"><div class="av" style="background:var(--scallion-soft)">🥬</div>최유나<span class="on"></span><span style="margin-left:auto;color:var(--sub)">⋯</span></div>
+              <div class="menu">
+                <div>🔑 암호 초기화</div>
+                <div class="d">🚫 추방하기</div>
+                <div class="d">🗑 명단에서 삭제</div>
+              </div>
+              <div class="p"><div class="av" style="background:var(--cheese-soft)">🍜</div>이시우<span class="on"></span></div>
+              <div class="p"><div class="av" style="background:#F6ECE3">🍄</div>정예준<span class="st ban">추방됨 · 풀기</span></div>
+              <div class="p"><div class="av" style="background:#F6ECE3;color:#C9B7AD">?</div><span style="color:var(--sub)">박하린</span><span class="st wait">미가입</span></div>
+              <div class="p"><div class="av" style="background:#F6ECE3;color:#C9B7AD">?</div><span style="color:var(--sub)">이지아</span><span class="st wait">미가입</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="note">삭제된 메시지는 학생들에게 "주방장이 건져낸 메시지예요"로 보여요. 흔적 없이 아예 사라지게 할 수도 있어요.</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div>
+      <span class="tag">⑤ 내 냄비 목록 (학생이 로그인하면)</span>
+      <div class="frame">
+        <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">부대찌개반.web.app</span></div>
+        <div class="pot">
+          <div class="logo" style="background:#F3E9FF">🍫</div>
+          <div><div class="t">박서준</div><div class="m">초콜릿으로 참여 중</div></div>
+        </div>
+        <div style="padding:16px 18px 22px;display:flex;flex-direction:column;gap:10px">
+          <div class="lbl" style="margin:0 0 2px">내가 들어가 있는 냄비</div>
+          <div class="room"><div class="av" style="background:var(--broth-soft)">🍲</div><div class="grow"><b>부대찌개반</b><div class="count">27명 · <span class="flame">🔥</span> 보글보글</div></div><span class="badge">3</span></div>
+          <div class="room"><div class="av" style="background:var(--scallion-soft)">🔬</div><div class="grow"><b>과학 모둠 3조</b><div class="count">5명 · <span class="flame">🔥</span> 보글보글</div></div></div>
+          <div class="room off"><div class="av" style="background:#F1ECE8">🎭</div><div class="grow"><b>학예회 준비</b><div class="count">8명 · 💤 불 꺼짐</div></div></div>
+        </div>
+      </div>
+      <p class="note">링크는 하나만 쓰고, 로그인하면 내가 들어가 있는 방만 보여요. 빨간 숫자는 안 읽은 메시지 수예요.</p>
+    </div>
+    <div></div>
+  </div>
+</div>
+</body>
+</html>
