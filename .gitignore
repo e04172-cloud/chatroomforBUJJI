@@ -6,3 +6,4 @@ dist/
 firestore.rules
 .firebaserc
 test-results/
+.env.emulator
