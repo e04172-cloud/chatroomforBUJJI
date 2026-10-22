@@ -1,0 +1,17 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "presence": {
+      "$roomId": {
+        ".read": "auth != null",
+        "$studentId": {
+          "$connId": {
+            ".write": "auth != null && auth.token.email != null && auth.token.email.matches(/^[a-z0-9]+-[0-9]+@students[.]budae[.]invalid$/) && auth.token.email.beginsWith($studentId + '-')",
+            ".validate": "newData.isBoolean() && newData.val() == true"
+          }
+        }
+      }
+    }
+  }
+}

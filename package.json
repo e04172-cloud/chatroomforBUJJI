@@ -8,7 +8,7 @@
     "dev:emu": "vite --mode emulator",
     "build": "tsc --noEmit && vite build",
     "test": "vitest run tests/unit",
-    "test:rules": "echo \"defined in Task 5\" && exit 1",
+    "test:rules": "node scripts/configure.mjs --test && npx firebase emulators:exec --only firestore,database \"vitest run tests/rules\"",
     "test:int": "echo \"defined in a later task\" && exit 1",
     "test:e2e": "echo \"defined in a later task\" && exit 1",
     "emulators": "npx firebase emulators:start --only auth,firestore,database,hosting"
@@ -32,6 +32,7 @@
     "@vitejs/plugin-react": "4.7.0",
     "firebase-tools": "13.35.1",
     "jsdom": "25.0.1",
+    "tsx": "4.19.2",
     "typescript": "5.6.3",
     "vite": "5.4.21",
     "vitest": "2.1.9"

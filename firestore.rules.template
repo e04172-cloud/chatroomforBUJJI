@@ -1,0 +1,229 @@
+rules_version = '2';
+
+// Template: scripts/configure.mjs fills in the teacher email and the banned-word regex, then writes firestore.rules.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- identity ----------
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isTeacher() {
+      return signedIn()
+        && request.auth.token.email == '__TEACHER_EMAIL__'
+        && request.auth.token.email_verified == true;
+    }
+
+    function studentDoc(sid) {
+      return /databases/$(database)/documents/students/$(sid);
+    }
+
+    // Student accounts are "<studentId>-<gen>@students.budae.invalid" (studentId has no '-').
+    function hasStudentEmail() {
+      return signedIn()
+        && request.auth.token.email is string
+        && request.auth.token.email.matches('^[a-z0-9]+-[0-9]+@students[.]budae[.]invalid$');
+    }
+
+    function me() {
+      let parts = request.auth.token.email.split('@')[0].split('-');
+      return { 'studentId': parts[0], 'gen': parts[1] };
+    }
+
+    // Only the account of the current generation counts; a PIN reset bumps gen and locks out old accounts.
+    function isStudent(sid) {
+      return hasStudentEmail()
+        && me().studentId == sid
+        && exists(studentDoc(sid))
+        && int(me().gen) == get(studentDoc(sid)).data.gen;
+    }
+
+    function myId() {
+      return me().studentId;
+    }
+
+    function isAnyStudent() {
+      return hasStudentEmail() && isStudent(myId());
+    }
+
+    function validIngredient(v) {
+      return v == null || (v is string && v.matches('^[a-z0-9_]{1,32}$'));
+    }
+
+    // ---------- rooms ----------
+
+    function roomDoc(roomId) {
+      return /databases/$(database)/documents/rooms/$(roomId);
+    }
+
+    function room(roomId) {
+      return get(roomDoc(roomId)).data;
+    }
+
+    function isMember(r) {
+      return isAnyStudent() && myId() in r.members;
+    }
+
+    function canChat(r) {
+      return isMember(r) && !(myId() in r.banned);
+    }
+
+    // Same as src/domain/fire.ts: KST minute of server time, off-window may wrap past midnight.
+    function kstMinute() {
+      return math.floor(request.time.toMillis() / 60000 + 540) % 1440;
+    }
+
+    function inOffWindow(m, offMin, onMin) {
+      return offMin == onMin ? false
+        : offMin < onMin ? (m >= offMin && m < onMin)
+        : (m >= offMin || m < onMin);
+    }
+
+    // A manual state wins while manualUntil is null or still in the future.
+    function manualActive(fire) {
+      return fire.manual != null && (fire.manualUntil == null || fire.manualUntil > request.time);
+    }
+
+    function fireOn(r) {
+      return manualActive(r.fire)
+        ? r.fire.manual == 'on'
+        : !(r.schedule.enabled && inOffWindow(kstMinute(), r.schedule.offMin, r.schedule.onMin));
+    }
+
+    // ---------- messages ----------
+
+    function rateDoc(roomId, sid) {
+      return /databases/$(database)/documents/rooms/$(roomId)/rate/$(sid);
+    }
+
+    // The same batch must set rate/{me}.at = request.time, and the previous one must be at least 1s old.
+    function passesRateLimit(roomId) {
+      let sid = myId();
+      return getAfter(rateDoc(roomId, sid)).data.at == request.time
+        && (!exists(rateDoc(roomId, sid))
+            || get(rateDoc(roomId, sid)).data.at + duration.value(1, 's') <= request.time);
+    }
+
+    function messageShape(m) {
+      return m.keys().hasOnly(['kind', 'authorId', 'authorName', 'ingredient', 'text', 'flagged', 'deleted', 'createdAt'])
+        && m.keys().hasAll(['kind', 'authorId', 'authorName', 'ingredient', 'text', 'flagged', 'deleted', 'createdAt'])
+        && m.authorName is string && m.authorName.size() <= 40
+        && validIngredient(m.ingredient)
+        && m.text is string
+        && m.flagged is bool
+        && m.deleted == false
+        && m.createdAt == request.time;
+    }
+
+    function validText(t) {
+      return t.size() <= 500 && t.trim().size() > 0;
+    }
+
+    function notBanned(t) {
+      return !t.matches('__BANNED_REGEX__');
+    }
+
+    function teacherMessage(m) {
+      return isTeacher()
+        && messageShape(m)
+        && m.authorId == 'teacher'
+        && ((m.kind == 'text' && validText(m.text))
+            || (m.kind == 'fire' && m.text in ['on', 'off'] && m.flagged == false));
+    }
+
+    // joined: one per room per account generation (fixed id), allowed while the fire is off, no rate doc.
+    function studentMessage(roomId, msgId, m) {
+      let r = room(roomId);
+      return canChat(r)
+        && messageShape(m)
+        && m.authorId == myId()
+        && m.authorName == get(studentDoc(myId())).data.name
+        && notBanned(m.text)
+        && ((m.kind == 'joined'
+              && msgId == 'joined-' + myId() + '-' + me().gen
+              && m.text == '' && m.flagged == false)
+            || (m.kind == 'text'
+              && validText(m.text)
+              && fireOn(r)
+              && passesRateLimit(roomId)));
+    }
+
+    match /students/{sid} {
+      allow read: if true;
+      allow create, delete: if isTeacher();
+      allow update: if isTeacher()
+        || (isStudent(sid)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ingredient'])
+            && validIngredient(request.resource.data.get('ingredient', null)))
+        // claim: set claimedGen to the current gen once, optionally with an ingredient
+        || (isStudent(sid)
+            && resource.data.claimedGen == null
+            && request.resource.data.claimedGen == resource.data.gen
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['claimedGen', 'ingredient'])
+            && validIngredient(request.resource.data.get('ingredient', null)));
+    }
+
+    match /rooms/{roomId} {
+      // Banned members can still read the room doc so the lobby can show it.
+      allow read: if isTeacher() || isMember(resource.data);
+      allow write: if isTeacher();
+
+      match /messages/{msgId} {
+        allow read: if isTeacher() || canChat(room(roomId));
+        allow create: if teacherMessage(request.resource.data)
+          || studentMessage(roomId, msgId, request.resource.data);
+        allow update: if isTeacher()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['deleted', 'text']);
+        allow delete: if isTeacher();
+      }
+
+      match /rate/{sid} {
+        allow read: if isTeacher() || isStudent(sid);
+        allow create, update: if isTeacher()
+          || (isStudent(sid)
+              && canChat(room(roomId))
+              && request.resource.data.keys().hasOnly(['at'])
+              && request.resource.data.at == request.time);
+        allow delete: if isTeacher();
+      }
+
+      match /reads/{sid} {
+        allow read: if isTeacher() || isStudent(sid);
+        allow create, update: if isTeacher()
+          || (isStudent(sid)
+              && isMember(room(roomId))
+              && request.resource.data.keys().hasOnly(['at'])
+              && request.resource.data.at == request.time);
+        allow delete: if isTeacher();
+      }
+    }
+
+    match /flags/{msgId} {
+      allow read, update, delete: if isTeacher();
+      // A student files a flag only for their own message created in the same batch.
+      allow create: if isTeacher() || flagForOwnNewMessage(request.resource.data);
+
+      function flagForOwnNewMessage(f) {
+        let msg = /databases/$(database)/documents/rooms/$(f.roomId)/messages/$(msgId);
+        return isAnyStudent()
+          && f.keys().hasOnly(['roomId', 'studentId', 'original', 'masked', 'hits', 'createdAt'])
+          && f.keys().hasAll(['roomId', 'studentId', 'original', 'masked', 'hits', 'createdAt'])
+          && f.roomId is string
+          && f.studentId == myId()
+          && f.original is string && f.original.size() <= 2000
+          && f.hits is list && f.hits.size() <= 50
+          && f.createdAt == request.time
+          && !exists(msg)
+          && getAfter(msg).data.flagged == true
+          && getAfter(msg).data.text == f.masked;
+      }
+    }
+
+    match /settings/app {
+      allow read: if isTeacher() || isAnyStudent();
+      allow write: if isTeacher();
+    }
+  }
+}
