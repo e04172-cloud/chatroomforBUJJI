@@ -1,15 +1,24 @@
 import {
   GoogleAuthProvider,
   onAuthStateChanged,
+  signInWithCredential,
   signInWithPopup,
   signInWithRedirect,
   signOut,
   type User,
 } from 'firebase/auth';
-import { TEACHER_EMAIL, auth } from './firebase';
+import { TEACHER_EMAIL, USE_EMULATORS, auth } from './firebase';
 import { errorCode } from './errors';
 
 export type { User };
+
+if (USE_EMULATORS && typeof window !== 'undefined') {
+  // Emulator builds only: lets the screen tests sign in as a Google account without the popup.
+  Object.assign(window, {
+    __budaeGoogleSignIn: (email = TEACHER_EMAIL) =>
+      signInWithCredential(auth, GoogleAuthProvider.credential(JSON.stringify({ sub: email, email, email_verified: true }))),
+  });
+}
 
 /** Google sign-in in a popup, falling back to a full-page redirect where popups are blocked. */
 export async function teacherSignIn(): Promise<void> {

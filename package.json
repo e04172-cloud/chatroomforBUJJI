@@ -10,7 +10,9 @@
     "test": "vitest run tests/unit",
     "test:rules": "node scripts/configure.mjs --test && npx firebase emulators:exec --only firestore,database \"vitest run tests/rules\"",
     "test:int": "node scripts/configure.mjs --test && npx firebase emulators:exec --only auth,firestore,database \"vitest run tests/integration --mode emulator --no-file-parallelism --testTimeout=30000\"",
-    "test:e2e": "echo \"defined in a later task\" && exit 1",
+    "test:e2e": "node scripts/configure.mjs --test && vite build --mode emulator && npx firebase emulators:exec --only auth,firestore,database \"playwright test\"",
+    "seed": "tsx scripts/seed-emulator.ts",
+    "preview:local": "node scripts/configure.mjs --test && npx firebase emulators:exec --only auth,firestore,database --ui \"tsx scripts/seed-emulator.ts && vite --mode emulator --host\"",
     "emulators": "npx firebase emulators:start --only auth,firestore,database,hosting"
   },
   "dependencies": {

@@ -74,6 +74,7 @@ export function JoinScreen({ roster, notice }: { roster: WithId<Student>[] | nul
               {roster.map((s) => (
                 <button key={s.id} type="button" aria-pressed={s.id === selected} onClick={() => pick(s.id)}
                   className={s.claimedGen != null || takenNow.has(s.id) ? 'nm taken' : 'nm'}>
+                  {(s.claimedGen != null || takenNow.has(s.id)) && <span className="tick" aria-hidden>✔ </span>}
                   {s.name}
                 </button>
               ))}

@@ -101,7 +101,7 @@ export function RoomScreen() {
         right={<>
           <button type="button" className="icon-btn" aria-label="냄비 목록으로" onClick={() => navigate('/')}>☰</button>
           <button type="button" className="pill" onClick={() => setSheet(true)} aria-label="내 재료와 메뉴">
-            {ing?.emoji} {student.name} ▾
+            {ing?.emoji}<span className="pill-name"> {student.name}</span> ▾
           </button>
         </>}
       />

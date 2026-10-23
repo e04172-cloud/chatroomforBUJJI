@@ -77,7 +77,7 @@ export function MessageBubble({ msg, mine, teacherView, original, onDelete }: {
         <div className="m-line">
           <div className={cls}>{body}</div>
           {onDelete && !msg.deleted && (
-            <button type="button" className="del-chip" onClick={onDelete} aria-label={`${msg.authorName}의 메시지 삭제`}>🗑 삭제</button>
+            <button type="button" className="del-chip" onClick={onDelete} aria-label={`${msg.authorName}의 메시지 삭제`}>🗑<span className="del-word"> 삭제</span></button>
           )}
           <span className="time">{formatTime(at)}</span>
         </div>

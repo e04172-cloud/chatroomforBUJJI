@@ -217,6 +217,12 @@ button:disabled { cursor: default; }
   white-space: nowrap;
 }
 .chat-off .msgs { filter: saturate(.35); }
+@media (max-width: 480px) {
+  .m-row { max-width: 94%; gap: 8px; }
+  .del-word { display: none; }
+  .del-chip { min-width: 36px; min-height: 36px; padding: 0; font-size: 14px; }
+  .pill-name { display: none; }
+}
 
 /* ---------- banners ---------- */
 .warnbox {
@@ -362,7 +368,7 @@ textarea.input { resize: vertical; min-height: 96px; line-height: 1.5; }
   overflow-wrap: anywhere;
 }
 .nm.taken { color: var(--sub); background: #FBF4EE; }
-.nm.taken::before { content: "✔ "; color: var(--scallion); font-size: 11px; }
+.nm .tick { color: var(--scallion); font-size: 11px; }
 .nm[aria-pressed="true"] { border-color: var(--broth); background: var(--broth-soft); color: var(--broth); font-weight: 700; }
 .emojis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
 .em {
@@ -427,6 +433,8 @@ textarea.input { resize: vertical; min-height: 96px; line-height: 1.5; }
   display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
 }
 .fire-box.off + .sched { border-color: #E2D7CF; }
+.sched-times { width: 100%; display: flex; align-items: center; gap: 6px; }
+.sched-times .tm { flex: 1; min-width: 0; }
 .tm {
   background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
   padding: 0 6px; min-height: 36px;

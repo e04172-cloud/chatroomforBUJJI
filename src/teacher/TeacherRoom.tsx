@@ -57,12 +57,14 @@ function FirePanel({ room, on, now }: { room: WithId<Room>; on: boolean; now: nu
             style={{ width: 18, height: 18, accentColor: 'var(--broth)' }} aria-label="자동 불 끄기 사용" />
           ⏰ 자동 불 끄기
         </label>
-        <input type="time" className="tm" value={toHHMM(draft.offMin)} aria-label="끄는 시각" disabled={!draft.enabled}
-          onChange={(e) => { const m = fromHHMM(e.target.value); if (m !== null) change({ offMin: m }); }} />
-        ~
-        <input type="time" className="tm" value={toHHMM(draft.onMin)} aria-label="켜는 시각" disabled={!draft.enabled}
-          onChange={(e) => { const m = fromHHMM(e.target.value); if (m !== null) change({ onMin: m }); }} />
-        매일
+        <div className="sched-times">
+          <input type="time" className="tm" value={toHHMM(draft.offMin)} aria-label="끄는 시각" disabled={!draft.enabled}
+            onChange={(e) => { const m = fromHHMM(e.target.value); if (m !== null) change({ offMin: m }); }} />
+          ~
+          <input type="time" className="tm" value={toHHMM(draft.onMin)} aria-label="켜는 시각" disabled={!draft.enabled}
+            onChange={(e) => { const m = fromHHMM(e.target.value); if (m !== null) change({ onMin: m }); }} />
+          매일
+        </div>
         {next && <div style={{ width: '100%', fontSize: 12 }}>{next}</div>}
       </div>
     </>
