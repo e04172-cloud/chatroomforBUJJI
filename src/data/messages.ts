@@ -20,13 +20,12 @@ import { maskText } from '../domain/filter';
 import { db } from './firebase';
 import { explainDenied } from './access';
 import { BannedError, RoomGoneError, TooLongError, isPermissionDenied } from './errors';
+import { MAX_MESSAGE_LENGTH, UNREAD_CAP } from './limits';
 import { getSettings } from './settings';
 import { currentStudent } from './students';
 import type { Author, Message, Room, WithId } from './types';
 
-export const MAX_MESSAGE_LENGTH = 500;
-/** Unread counts stop here; the lobby shows "99+". */
-export const UNREAD_CAP = 100;
+export { MAX_MESSAGE_LENGTH, UNREAD_CAP };
 
 const messagesOf = (roomId: string) => collection(db, 'rooms', roomId, 'messages');
 
