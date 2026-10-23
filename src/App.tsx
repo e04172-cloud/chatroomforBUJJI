@@ -1,3 +1,14 @@
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { StudentApp } from './student/StudentApp';
+import { TeacherApp } from './teacher/TeacherApp';
+
 export default function App() {
-  return <h1>부대찌개반 대화방</h1>;
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/teacher/*" element={<TeacherApp />} />
+        <Route path="/*" element={<StudentApp />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
