@@ -408,6 +408,7 @@ textarea.input { resize: vertical; min-height: 96px; line-height: 1.5; }
   .t-layout > .side { display: none; }
 }
 @media (min-width: 769px) { .only-mobile { display: none !important; } }
+@media (max-width: 768px) { .hide-mobile { display: none !important; } }
 .fire-box {
   margin: 12px 12px 0;
   padding: 8px 12px 8px 14px;

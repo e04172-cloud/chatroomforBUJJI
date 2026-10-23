@@ -13,7 +13,7 @@ function maskedText(text: string): ReactNode[] {
 }
 
 /** Highlights, in the original, the characters the mask replaced (maskText keeps one ＊ per character). */
-function highlightedOriginal(original: string, masked: string): ReactNode[] {
+export function highlightedOriginal(original: string, masked: string): ReactNode[] {
   const o = [...original];
   const m = [...masked];
   const out: ReactNode[] = [];

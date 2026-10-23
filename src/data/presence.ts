@@ -25,3 +25,8 @@ export function joinPresence(roomId: string, sid: string): () => void {
 export function watchOnlineCount(roomId: string, cb: (n: number) => void): () => void {
   return onValue(ref(rtdb, `presence/${roomId}`), (snap) => cb(snap.size), () => cb(0));
 }
+
+/** Student ids with at least one live connection, for the green dots on the teacher's list. */
+export function watchOnlineIds(roomId: string, cb: (ids: Set<string>) => void): () => void {
+  return onValue(ref(rtdb, `presence/${roomId}`), (snap) => cb(new Set(Object.keys(snap.val() ?? {}))), () => cb(new Set()));
+}
