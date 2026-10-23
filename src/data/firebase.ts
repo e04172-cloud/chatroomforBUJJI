@@ -24,7 +24,10 @@ export const db = getFirestore(app);
 export const rtdb = getDatabase(app);
 
 if (USE_EMULATORS) {
-  connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
-  connectFirestoreEmulator(db, '127.0.0.1', 8080);
-  connectDatabaseEmulator(rtdb, '127.0.0.1', 9000);
+  // A phone opening the dev server by the PC's address must reach the emulators on that PC, not on itself.
+  const page = typeof location === 'undefined' ? '' : location.hostname;
+  const host = !page || page === 'localhost' ? '127.0.0.1' : page;
+  connectAuthEmulator(auth, `http://${host}:9099`, { disableWarnings: true });
+  connectFirestoreEmulator(db, host, 8080);
+  connectDatabaseEmulator(rtdb, host, 9000);
 }
