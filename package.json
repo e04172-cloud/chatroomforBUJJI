@@ -9,7 +9,7 @@
     "build": "tsc --noEmit && vite build",
     "test": "vitest run tests/unit",
     "test:rules": "node scripts/configure.mjs --test && npx firebase emulators:exec --only firestore,database \"vitest run tests/rules\"",
-    "test:int": "echo \"defined in a later task\" && exit 1",
+    "test:int": "node scripts/configure.mjs --test && npx firebase emulators:exec --only auth,firestore,database \"vitest run tests/integration --mode emulator --no-file-parallelism --testTimeout=30000\"",
     "test:e2e": "echo \"defined in a later task\" && exit 1",
     "emulators": "npx firebase emulators:start --only auth,firestore,database,hosting"
   },
