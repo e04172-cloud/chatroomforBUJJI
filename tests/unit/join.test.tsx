@@ -18,7 +18,7 @@ vi.mock('../../src/data/students', () => ({
   setIngredient: vi.fn(),
 }));
 vi.mock('../../src/data/rooms', () => ({ watchMyRooms: vi.fn(() => () => {}) }));
-vi.mock('../../src/data/messages', () => ({ unreadCount: vi.fn(async () => 0) }));
+vi.mock('../../src/data/messages', () => ({ watchUnread: vi.fn(() => () => {}) }));
 vi.mock('../../src/data/presence', () => ({}));
 
 const s = (id: string, name: string, claimed: boolean, order: number): WithId<Student> =>

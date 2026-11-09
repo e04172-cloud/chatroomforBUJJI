@@ -1,8 +1,6 @@
 import {
   collection,
   doc,
-  getDoc,
-  getDocs,
   limit,
   limitToLast,
   onSnapshot,
@@ -115,18 +113,25 @@ export async function markRead(roomId: string, sid: string): Promise<void> {
   await setDoc(doc(db, 'rooms', roomId, 'reads', sid), { at: serverTimestamp() });
 }
 
-/** Messages by others since the student last read the room, up to UNREAD_CAP; 0 if the room is closed to them. */
-export async function unreadCount(roomId: string, sid: string): Promise<number> {
-  try {
-    const read = await getDoc(doc(db, 'rooms', roomId, 'reads', sid));
-    const since = read.exists() ? (read.data().at as Timestamp) : null;
+/**
+ * Live count of messages by others since the student last read the room, up to UNREAD_CAP; 0 if the room is
+ * closed to them. Listening instead of polling means an idle lobby costs no reads until something changes.
+ */
+export function watchUnread(roomId: string, sid: string, cb: (n: number) => void): Unsubscribe {
+  let stopMessages: Unsubscribe = () => {};
+  const denied = (e: unknown) => {
+    if (isPermissionDenied(e)) cb(0);
+  };
+  const stopRead = onSnapshot(doc(db, 'rooms', roomId, 'reads', sid), (read) => {
+    stopMessages();
+    const since = read.exists() ? (read.data({ serverTimestamps: 'estimate' }).at as Timestamp) : null;
     const q = since
       ? query(messagesOf(roomId), where('createdAt', '>', since), orderBy('createdAt'), limit(UNREAD_CAP))
       : query(messagesOf(roomId), orderBy('createdAt'), limit(UNREAD_CAP));
-    const snap = await getDocs(q);
-    return snap.docs.filter((d) => (d.data() as Message).authorId !== sid).length;
-  } catch (e) {
-    if (isPermissionDenied(e)) return 0;
-    throw e;
-  }
+    stopMessages = onSnapshot(q, (snap) => cb(snap.docs.filter((d) => (d.data() as Message).authorId !== sid).length), denied);
+  }, denied);
+  return () => {
+    stopRead();
+    stopMessages();
+  };
 }

@@ -19,7 +19,7 @@ vi.mock('../../src/data/messages', () => ({
   watchMessages: vi.fn(),
   sendMessage: vi.fn(),
   markRead: vi.fn(async () => {}),
-  unreadCount: vi.fn(async () => 0),
+  watchUnread: vi.fn((_room: string, _sid: string, cb: (n: number) => void) => (cb(0), () => {})),
 }));
 vi.mock('../../src/data/presence', () => ({ joinPresence: vi.fn(), watchOnlineCount: vi.fn() }));
 
@@ -183,7 +183,7 @@ describe('LobbyScreen', () => {
   });
 
   test('안 읽은 수 배지와 방 들어가기', async () => {
-    vi.mocked(messages.unreadCount).mockResolvedValue(3);
+    vi.mocked(messages.watchUnread).mockImplementation((_room, _sid, cb) => (cb(3), () => {}));
     renderLobby([roomFixture({ schedule: { enabled: false, offMin: 0, onMin: 0 }, createdAt: Timestamp.now() })]);
     expect(await screen.findByText('3')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /부대찌개반/ }));

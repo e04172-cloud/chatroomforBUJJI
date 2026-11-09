@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, test } from 'vitest';
-import { arrayUnion, collection, doc, getDoc, getDocs, increment, updateDoc } from 'firebase/firestore';
+import { arrayUnion, collection, doc, getDoc, getDocs, increment, setDoc, updateDoc } from 'firebase/firestore';
 import { get, ref } from 'firebase/database';
 import { db, rtdb } from '../../src/data/firebase';
 import {
@@ -23,7 +23,7 @@ import {
   watchSession,
 } from '../../src/data/students';
 import { ban, createRoom, deleteRoom, setFire, setSchedule, unban, watchRoom } from '../../src/data/rooms';
-import { deleteMessage, markRead, sendMessage, unreadCount, watchMessages } from '../../src/data/messages';
+import { deleteMessage, markRead, newMessage, sendMessage, watchMessages, watchUnread } from '../../src/data/messages';
 import { joinPresence, watchOnlineCount } from '../../src/data/presence';
 import { watchFlags } from '../../src/data/flags';
 import { setTeacherName } from '../../src/data/settings';
@@ -186,9 +186,18 @@ describe('메시지', () => {
     await logout();
 
     await loginStudent(a, PIN);
-    expect(await unreadCount(room, a)).toBe(2);
+    let unread: number | undefined;
+    const stop = watchUnread(room, a, (n) => (unread = n));
+    expect(await waitFor(() => (unread === 2 ? unread : undefined))).toBe(2);
     await markRead(room, a);
-    expect(await unreadCount(room, a)).toBe(0);
+    expect(await waitFor(() => (unread === 0 ? unread : undefined))).toBe(0);
+
+    const other = await otherTeacherClient();
+    await setDoc(doc(collection(other.db, 'rooms', room, 'messages')),
+      newMessage({ kind: 'text', authorId: 'teacher', authorName: '담임선생님', ingredient: null, text: '셋', flagged: false }));
+    expect(await waitFor(() => (unread === 1 ? unread : undefined))).toBe(1);
+    stop();
+    await other.close();
   });
 });
 

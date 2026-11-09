@@ -4,7 +4,7 @@ import { isFireOn } from '../domain/fire';
 import { ingredientByKey } from '../domain/ingredients';
 import { SessionExpiredError } from '../data/errors';
 import { UNREAD_CAP } from '../data/limits';
-import { unreadCount } from '../data/messages';
+import { watchUnread } from '../data/messages';
 import { watchMyRooms } from '../data/rooms';
 import { toFireInput, type Room, type WithId } from '../data/types';
 import { ingredientTint } from '../components/Avatar';
@@ -12,8 +12,6 @@ import { Flame, PotHeader } from '../components/PotHeader';
 import { useNow } from '../components/useNow';
 import { MeSheet } from './MeSheet';
 import { useShell, withRo } from './shell';
-
-const UNREAD_REFRESH_MS = 20_000;
 
 export function LobbyScreen() {
   const { me, student, notice, setNotice, expire } = useShell();
@@ -31,19 +29,8 @@ export function LobbyScreen() {
   const openIds = (rooms ?? []).filter((r) => !r.banned.includes(me.id)).map((r) => r.id).join(',');
   useEffect(() => {
     if (!openIds) return;
-    let alive = true;
-    const refresh = () => {
-      for (const id of openIds.split(','))
-        unreadCount(id, me.id).then((n) => alive && setUnread((u) => ({ ...u, [id]: n })), () => {});
-    };
-    refresh();
-    const t = setInterval(refresh, UNREAD_REFRESH_MS);
-    document.addEventListener('visibilitychange', refresh);
-    return () => {
-      alive = false;
-      clearInterval(t);
-      document.removeEventListener('visibilitychange', refresh);
-    };
+    const stops = openIds.split(',').map((id) => watchUnread(id, me.id, (n) => setUnread((u) => ({ ...u, [id]: n }))));
+    return () => stops.forEach((stop) => stop());
   }, [openIds, me.id]);
 
   const ing = student.ingredient ? ingredientByKey(student.ingredient) : undefined;
