@@ -10,6 +10,7 @@ import * as rooms from '../../src/data/rooms';
 import type { Message, Room, Student, WithId } from '../../src/data/types';
 import { LobbyScreen } from '../../src/student/LobbyScreen';
 import { BANNED_TEXT, RoomScreen, WARN_TEXT } from '../../src/student/RoomScreen';
+import { PAGE_SIZE } from '../../src/components/useMessagePages';
 import { ShellContext, type StudentShell } from '../../src/student/shell';
 import { msg, room as roomFixture } from './fixtures';
 
@@ -90,6 +91,23 @@ describe('RoomScreen', () => {
     expect(screen.getByText('공지').closest('.m-row')).not.toHaveClass('me');
     expect(screen.getByText('주방장')).toBeInTheDocument();
     expect(screen.getByText(/지금 1명 보글보글/)).toBeInTheDocument();
+  });
+
+  test('처음엔 최근 50개, 더 보기로 50개씩 더 불러오고 다 보면 버튼이 사라진다', async () => {
+    const many = (n: number) => Array.from({ length: n }, (_, i) => msg({ id: `m${i}`, text: `말 ${i}` }));
+    openRoom({}, many(PAGE_SIZE));
+    expect(messages.watchMessages).toHaveBeenLastCalledWith('R', expect.any(Function), expect.any(Function), PAGE_SIZE);
+    await userEvent.click(screen.getByRole('button', { name: '이전 메시지 더 보기' }));
+    expect(screen.getByRole('button', { name: '불러오는 중…' })).toBeDisabled();
+    expect(messages.watchMessages).toHaveBeenLastCalledWith('R', expect.any(Function), expect.any(Function), PAGE_SIZE * 2);
+    act(() => pushMessages(many(PAGE_SIZE + 10)));
+    expect(screen.getByText('말 59')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /이전 메시지|불러오는 중/ })).not.toBeInTheDocument();
+  });
+
+  test('메시지가 50개보다 적으면 더 보기 버튼이 없다', () => {
+    openRoom({}, [msg({ id: '1' })]);
+    expect(screen.queryByRole('button', { name: '이전 메시지 더 보기' })).not.toBeInTheDocument();
   });
 
   test('가려진 메시지를 보내면 경고, 다음 정상 메시지에서 사라진다', async () => {

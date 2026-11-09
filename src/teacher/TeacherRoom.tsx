@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { isFireOn, nextChangeLabel } from '../domain/fire';
 import { watchFlagsForRoom } from '../data/flags';
-import { deleteMessage, sendMessage, watchMessages } from '../data/messages';
+import { deleteMessage, sendMessage } from '../data/messages';
 import { watchOnlineIds } from '../data/presence';
 import { ban, deleteRoom, setFire, setSchedule, unban, updateRoom, updateRoomMembers, watchRoom } from '../data/rooms';
 import { toFireInput, type Flag, type Message, type Room, type WithId } from '../data/types';
@@ -13,6 +13,7 @@ import { MessageBubble } from '../components/MessageBubble';
 import { MessageList, scrollToBottomSoon } from '../components/MessageList';
 import { Flame, PotHeader } from '../components/PotHeader';
 import { Sheet } from '../components/Sheet';
+import { useMessagePages } from '../components/useMessagePages';
 import { useNow } from '../components/useNow';
 import { CopyLink } from './CopyLink';
 import { RoomEditor } from './RoomEditor';
@@ -160,7 +161,6 @@ export function TeacherRoom() {
   const navigate = useNavigate();
   const now = useNow();
   const [room, setRoom] = useState<WithId<Room> | null>(null);
-  const [messages, setMessages] = useState<WithId<Message>[]>([]);
   const [flags, setFlags] = useState<Map<string, Flag>>(new Map());
   const [online, setOnline] = useState<Set<string>>(new Set());
   const [panel, setPanel] = useState(false);
@@ -171,7 +171,7 @@ export function TeacherRoom() {
 
   const home = () => navigate('/teacher', { replace: true });
   useEffect(() => watchRoom(roomId, setRoom, () => navigate('/teacher', { replace: true })), [roomId, navigate]);
-  useEffect(() => watchMessages(roomId, setMessages, () => {}), [roomId]);
+  const { messages, hasMore, loadingMore, loadMore } = useMessagePages(roomId, () => {});
   useEffect(() => watchFlagsForRoom(roomId, setFlags), [roomId]);
   useEffect(() => watchOnlineIds(roomId, setOnline), [roomId]);
 
@@ -212,6 +212,7 @@ export function TeacherRoom() {
         <div className="t-chat">
           <MessageList
             messages={messages}
+            more={hasMore ? { loading: loadingMore, onLoad: loadMore } : undefined}
             empty={<p className="center-note">아직 조용한 냄비예요. 첫 공지를 넣어 보세요.</p>}
             renderItem={(m) => (
               <MessageBubble msg={m} mine={m.authorId === 'teacher'} teacherView original={flags.get(m.id)?.original}

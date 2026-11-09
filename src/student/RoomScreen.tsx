@@ -3,16 +3,17 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { isFireOn, nextChangeLabel } from '../domain/fire';
 import { ingredientByKey } from '../domain/ingredients';
 import { BannedError, BudaeError, FireOffError, SessionExpiredError, TooFastError } from '../data/errors';
-import { markRead, sendMessage, watchMessages } from '../data/messages';
+import { markRead, sendMessage } from '../data/messages';
 import { joinPresence, watchOnlineCount } from '../data/presence';
 import { watchRoom } from '../data/rooms';
-import { toFireInput, type Message, type Room, type WithId } from '../data/types';
+import { toFireInput, type Room, type WithId } from '../data/types';
 import { Composer } from '../components/Composer';
 import { FireBanner } from '../components/FireBanner';
 import { MessageBubble } from '../components/MessageBubble';
 import { MessageList, scrollToBottomSoon } from '../components/MessageList';
 import { Flame, PotHeader } from '../components/PotHeader';
 import { TodayPot } from '../components/TodayPot';
+import { useMessagePages } from '../components/useMessagePages';
 import { useNow } from '../components/useNow';
 import { MeSheet } from './MeSheet';
 import { useShell } from './shell';
@@ -27,7 +28,6 @@ export function RoomScreen() {
   const navigate = useNavigate();
   const now = useNow();
   const [room, setRoom] = useState<WithId<Room> | null>(null);
-  const [messages, setMessages] = useState<WithId<Message>[]>([]);
   const [online, setOnline] = useState(0);
   const [warn, setWarn] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +43,7 @@ export function RoomScreen() {
     if (r.banned.includes(me.id)) leave(new BannedError());
     else setRoom(r);
   }, leave), [roomId, me.id, leave]);
-  useEffect(() => watchMessages(roomId, setMessages, leave), [roomId, leave]);
+  const { messages, hasMore, loadingMore, loadMore } = useMessagePages(roomId, leave);
   useEffect(() => joinPresence(roomId, me.id), [roomId, me.id]);
   useEffect(() => watchOnlineCount(roomId, setOnline), [roomId]);
 
@@ -109,6 +109,7 @@ export function RoomScreen() {
       {!on && <FireBanner nextLabel={nextChangeLabel(fire, now)} />}
       <MessageList
         messages={messages}
+        more={hasMore ? { loading: loadingMore, onLoad: loadMore } : undefined}
         empty={<p className="center-note">아직 조용한 냄비예요. 첫 마디를 넣어 볼까요?</p>}
         renderItem={(m) => <MessageBubble msg={m} mine={m.authorId === me.id} />}
       />

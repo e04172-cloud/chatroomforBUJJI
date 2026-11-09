@@ -59,6 +59,23 @@ test('냄비 목록', async ({ page }) => {
   await shot(page, '2-lobby');
 });
 
+test('이전 메시지 더 보기', async ({ page }) => {
+  await loginStudent(page);
+  await page.getByRole('button', { name: /부대찌개반/ }).click();
+  await expect(page.getByText('모두 내일 봐요 😊')).toBeVisible();
+  await expect(page.getByText('지난 이야기 11', { exact: true })).toHaveCount(0);
+  await page.locator('.msgs').evaluate((el) => (el.scrollTop = 0));
+  const first = page.getByText('지난 이야기 12', { exact: true });
+  await expect(first).toBeInViewport();
+  await shot(page, '3b-more');
+  await page.getByRole('button', { name: '이전 메시지 더 보기' }).click();
+  await expect(page.getByText('지난 이야기 1', { exact: true })).toBeAttached();
+  // The reader stays on the message they were looking at instead of jumping.
+  await expect(first).toBeInViewport();
+  await expect(page.getByRole('button', { name: '이전 메시지 더 보기' })).toHaveCount(0);
+  await noSideScroll(page);
+});
+
 test('대화방', async ({ page }) => {
   await loginStudent(page);
   await page.getByRole('button', { name: /부대찌개반/ }).click();

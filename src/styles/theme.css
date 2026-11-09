@@ -165,6 +165,13 @@ button:disabled { cursor: default; }
   background: #fff; border: 1px solid var(--line);
   padding: 4px 12px; border-radius: 999px;
 }
+.older-btn {
+  align-self: center; flex-shrink: 0;
+  min-height: 44px; padding: 0 16px; border-radius: 999px;
+  border: 1px solid var(--line); background: #fff;
+  color: var(--broth); font-size: 13px; font-weight: 700;
+}
+.older-btn:disabled { color: var(--sub); }
 .m-row { display: flex; gap: 10px; align-items: flex-start; max-width: min(84%, 560px); min-width: 0; }
 .m-row.me { align-self: flex-end; flex-direction: row-reverse; }
 .m-main { min-width: 0; display: flex; flex-direction: column; }

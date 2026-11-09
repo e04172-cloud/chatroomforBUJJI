@@ -80,6 +80,8 @@ export async function seed() {
       await setDoc(doc(db, 'rooms', 'budae', 'messages', `joined-${s.id}-1`), {
         kind: 'joined', authorId: s.id, authorName: s.name, ingredient: s.ingredient, text: '', flagged: false, deleted: false, createdAt: at(5),
       });
+    // Older chatter so the room has more than one page and shows "이전 메시지 더 보기".
+    for (let i = 1; i <= 40; i++) await say('budae', [gaeun, siwoo, yuna][i % 3], `지난 이야기 ${i}`);
     await say('budae', siwoo, '내일 현장체험학습 몇 시까지 와야 돼?');
     await say('budae', 'teacher', '8시 40분까지 운동장으로 오세요. 도시락 꼭 챙기고요! 🍱');
     const flaggedId = await say('budae', yuna, '아 진짜 ＊＊ 일찍이네 ㅋㅋ', { flagged: true });
